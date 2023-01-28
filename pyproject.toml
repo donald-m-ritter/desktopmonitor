@@ -1,0 +1,89 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "desktopmonitor"
+description = 'Simple tool to gather system monitoring information to then present on an external system like a Raspberry Pie'
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Donald Ritter", email = "donald.m.ritter@gmail.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "invoke~=2.0"
+]
+dynamic = ["version"]
+
+[project.urls]
+Documentation = "https://github.com/donald-m-ritter/desktopmonitor"
+Issues = "https://github.com/donald-m-ritter/desktopmonitor/issues"
+Source = "https://github.com/donald-m-ritter/desktopmonitor"
+
+[tool.hatch.version]
+path = "desktopmonitor/__about__.py"
+
+[tool.hatch.envs.default]
+platforms = [
+  "linux"
+]
+
+[tool.hatch.envs.default.scripts]
+test = "hatch run test:run"
+lint = "hatch run lint:run"
+
+[tool.hatch.envs.test]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+]
+
+[[tool.hatch.envs.test.matrix]]
+python = ["310"]
+
+[tool.hatch.envs.test.scripts]
+run-coverage = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=desktopmonitor --cov=tests {args}"
+run = "run-coverage --no-cov {args}"
+
+[tool.hatch.envs.lint]
+detached = true
+dependencies = [
+  "flake8",
+  "Flake8-pyproject"
+]
+
+[tool.hatch.envs.lint.scripts]
+run = "flake8"
+
+[tool.coverage.run]
+branch = true
+parallel = true
+omit = [
+  "desktopmonitor/__about__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.flake8]
+exclude = [
+  ".git",
+  "__pycache__",
+  "docs",
+  "dist",
+  ".virtualenvs"
+]
