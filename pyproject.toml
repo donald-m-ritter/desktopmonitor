@@ -21,7 +21,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "invoke~=2.0"
+  "invoke~=2.0",
+  "click~=8.1"
 ]
 dynamic = ["version"]
 
@@ -29,6 +30,9 @@ dynamic = ["version"]
 Documentation = "https://github.com/donald-m-ritter/desktopmonitor"
 Issues = "https://github.com/donald-m-ritter/desktopmonitor/issues"
 Source = "https://github.com/donald-m-ritter/desktopmonitor"
+
+[project.scripts]
+dmonitor = "desktopmonitor.__main__:command"
 
 [tool.hatch.version]
 path = "desktopmonitor/__about__.py"
