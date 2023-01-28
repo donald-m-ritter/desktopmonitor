@@ -1,0 +1,16 @@
+analyzing CPU 0:
+  driver: acpi-cpufreq
+  CPUs which run at the same hardware frequency: 0
+  CPUs which need to have their frequency coordinated by software: 0
+  maximum transition latency:  Cannot determine or is not supported.
+  hardware limits: 1.40 GHz - 4.67 GHz
+  available frequency steps:  3.80 GHz, 1.70 GHz, 1.40 GHz
+  available cpufreq governors: conservative ondemand userspace powersave performance schedutil
+  current policy: frequency should be within 1.40 GHz and 3.80 GHz.
+                  The governor "schedutil" may decide which speed to use
+                  within this range.
+  current CPU frequency: Unable to call hardware
+  current CPU frequency: 2.82 GHz (asserted by call to kernel)
+  boost state support:
+    Supported: yes
+    Active: no

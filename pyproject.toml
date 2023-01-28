@@ -50,6 +50,7 @@ lint = "hatch run lint:run"
 dependencies = [
   "pytest",
   "pytest-cov",
+  "expects"
 ]
 
 [[tool.hatch.envs.test.matrix]]
