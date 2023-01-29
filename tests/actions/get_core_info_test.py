@@ -18,6 +18,7 @@ class Fixtures:
     CPUINFO_SUCCESS = os.path.join(FIXTURES_DIR, 'cpuinfo.stdout')
     CPUPOWER_SUCCESS = os.path.join(FIXTURES_DIR, 'cpupower.stdout')
     SENSORS_SUCCESS = os.path.join(FIXTURES_DIR, 'sensors.stdout')
+    MPSTAT_SUCCESS = os.path.join(FIXTURES_DIR, 'mpstat.stdout')
 
 
 class SuccessfulGetCPUInfo(GetCPUInfo):
@@ -32,6 +33,10 @@ class SuccessfulGetCPUInfo(GetCPUInfo):
     def execute_sensors(self):
         with open(Fixtures.SENSORS_SUCCESS, 'r') as f:
             self.sensors_result = Result(stdout=f.read(), stderr='', exited=0)
+
+    def execute_mpstat(self):
+        with open(Fixtures.MPSTAT_SUCCESS, 'r') as f:
+            self.mpstat_result = Result(stdout=f.read(), stderr='', exited=0)
 
 
 class GetCoreInfoTest(TestCase):
@@ -54,4 +59,4 @@ class GetCoreInfoTest(TestCase):
         expect(self.action.cores_by_id["0"].cpus_by_id["0"].maximum_frequency).to(equal(4782.08))
         expect(self.action.cores_by_id["0"].cpus_by_id["0"].current_frequency).to(equal(2853.877))
         expect(self.action.cores_by_id["0"].cpus_by_id["0"].temperature).to(equal(29.8))
-        expect(self.action.cores_by_id["0"].cpus_by_id["0"].utilization).to(equal(0.0))
+        expect(self.action.cores_by_id["0"].cpus_by_id["0"].utilization).to(equal(1.13))

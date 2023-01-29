@@ -34,6 +34,8 @@ class GetCPUInfo(Callable):
         GHZ = "GHz"
         MHZ = "MHz"
         MODEL_NAME = "model name"
+        MPSTAT = "mpstat -P ALL"
+        MPSTAT_DELIMINATOR = " "
         PHYSICAL_ID = "physical id"
         PROCESSOR = "processor"
         SENSORS = "sensors"
@@ -46,6 +48,7 @@ class GetCPUInfo(Callable):
     cpupower_result: Optional[Result] = None
     cpupower_processor_chunks: Optional[List[Dict[str, str]]] = None
     sensors_result: Optional[Result] = None
+    mpstat_result: Optional[Result] = None
 
     def __call__(self, *args, **kwargs):
         self.cores_by_id = {}
@@ -55,6 +58,8 @@ class GetCPUInfo(Callable):
         self.process_cpupower()
         self.execute_sensors()
         self.process_sensors()
+        self.execute_mpstat()
+        self.process_mpstat()
 
     def execute_cpuinfo(self):
         try:
@@ -275,5 +280,53 @@ class GetCPUInfo(Callable):
         """
         if not self.sensors_result or self.sensors_result.return_code != 0:
             message = f'{GetCPUInfo.Constants.SENSORS} did not run successfully: {self.sensors_result.stderr}'
+            click.echo(click.style(message, fg='red'))
+            raise click.Abort()
+
+    def execute_mpstat(self):
+        self.mpstat_result = run(
+            command=GetCPUInfo.Constants.MPSTAT,
+            echo_stdin=False,
+            in_stream=False,
+            out_stream=StringIO(),
+            err_stream=StringIO(),
+            warn=True
+        )
+
+    def process_mpstat(self):
+        """
+        Parses the result of mpstat to determine the CPU utilization
+        """
+        self.abort_if_mpstat_failed()
+        lines = self.mpstat_result.stdout.splitlines()
+
+        for line in lines:
+            self.process_mpstat_line(line.split())
+
+    def process_mpstat_line(self, components: List[str]):
+        if len(components) != 13:
+            return
+
+        cpu_id = components[2]
+
+        if cpu_id == "all":
+            return
+
+        for core in self.cores_by_id.values():
+            cpu = core.cpus_by_id.get(cpu_id, None)
+
+            if cpu is not None:
+                try:
+                    cpu.utilization = round((100.0 - float(components[-1])) * 100.0) / 100.0
+                except:
+                    # If the cpu id or idle can't be parsed it doesn't really matter
+                    pass
+
+    def abort_if_mpstat_failed(self):
+        """
+        Aborts the CLI if getting mpstat failed.
+        """
+        if not self.mpstat_result or self.mpstat_result.return_code != 0:
+            message = f'{GetCPUInfo.Constants.MPSTAT} did not run successfully: {self.mpstat_result.stderr}'
             click.echo(click.style(message, fg='red'))
             raise click.Abort()
