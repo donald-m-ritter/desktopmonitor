@@ -22,23 +22,30 @@ class GetCPUInfo(Callable):
     class Constants:
         ANALYZING_CPU = "analyzing CPU"
         CORE_ID = "core id"
+        CPU_TEMPERATURE = "CPU Temperature"
         CPUINFO = "cat /proc/cpuinfo"
         CPUINFO_DELIMINATOR = ":"
         CPUPOWER = "cpupower frequency-info"
         CPUPOWER_DELIMINATOR = ":"
         CPUMHZ = "cpu MHz"
+        DEGREES_CELCIUS = "°C"
         HARDWARE_LIMITS = "hardware limits"
         HARDWARE_LIMITS_DELIMINATOR = "-"
-        MHZ = "MHz"
         GHZ = "GHz"
+        MHZ = "MHz"
+        MODEL_NAME = "model name"
         PHYSICAL_ID = "physical id"
         PROCESSOR = "processor"
+        SENSORS = "sensors"
+        SENSORS_DELIMINATOR = ":"
+        TCTL = "Tctl"
 
     cores_by_id: Optional[Dict[str, Core]] = None
     cpuinfo_result: Optional[Result] = None
     cpuinfo_processor_chunks: Optional[List[Dict[str, str]]] = None
     cpupower_result: Optional[Result] = None
     cpupower_processor_chunks: Optional[List[Dict[str, str]]] = None
+    sensors_result: Optional[Result] = None
 
     def __call__(self, *args, **kwargs):
         self.cores_by_id = {}
@@ -46,16 +53,21 @@ class GetCPUInfo(Callable):
         self.process_cpuinfo()
         self.execute_cpupower()
         self.process_cpupower()
+        self.execute_sensors()
+        self.process_sensors()
 
     def execute_cpuinfo(self):
-        self.cpuinfo_result = run(
-            command=GetCPUInfo.Constants.CPUINFO,
-            echo_stdin=False,
-            err_stream=None,
-            in_stream=StringIO(),
-            out_steam=StringIO(),
-            warn=True
-        )
+        try:
+            self.cpuinfo_result = run(
+                command=GetCPUInfo.Constants.CPUINFO,
+                echo_stdin=False,
+                in_stream=False,
+                out_stream=StringIO(),
+                err_stream=StringIO(),
+                warn=True
+            )
+        except Exception:
+            pass
 
     def process_cpuinfo(self):
         """
@@ -117,14 +129,17 @@ class GetCPUInfo(Callable):
             processor = processor_chunk.get(GetCPUInfo.Constants.PROCESSOR, None)
             physical_id = processor_chunk.get(GetCPUInfo.Constants.PHYSICAL_ID, None)
             current_frequency = processor_chunk.get(GetCPUInfo.Constants.CPUMHZ, None)
+            model_name = processor_chunk.get(GetCPUInfo.Constants.MODEL_NAME, None)
 
-            if core_id is None or processor is None or current_frequency is None or physical_id is None:
+            if core_id is None or processor is None or current_frequency is None or physical_id is None or model_name is None:  # noqa: E501
                 continue
 
             core = self.cores_by_id[core_id]
             core.cpus_by_id[processor] = CPU(
                 id=processor,
                 physical_id=physical_id,
+                core_id=core_id,
+                model_name=model_name,
                 minimum_frequency=0.0,
                 maximum_frequency=0.0,
                 current_frequency=float(current_frequency),
@@ -136,9 +151,9 @@ class GetCPUInfo(Callable):
         self.cpupower_result = run(
             command=GetCPUInfo.Constants.CPUPOWER,
             echo_stdin=False,
-            err_stream=None,
-            in_stream=StringIO(),
-            out_steam=StringIO(),
+            in_stream=False,
+            out_stream=StringIO(),
+            err_stream=StringIO(),
             warn=True
         )
 
@@ -155,7 +170,7 @@ class GetCPUInfo(Callable):
         Aborts the CLI if getting cpupower failed.
         """
         if not self.cpupower_result or self.cpupower_result.return_code != 0:
-            message = f'{GetCPUInfo.Constants.CPUPOWER} did not run successfully: {self.cpuinfo_result.stderr}'
+            message = f'{GetCPUInfo.Constants.CPUPOWER} did not run successfully: {self.cpupower_result.stderr}'
             click.echo(click.style(message, fg='red'))
             raise click.Abort()
 
@@ -208,3 +223,57 @@ class GetCPUInfo(Callable):
             return float(raw_frequency.replace(GetCPUInfo.Constants.GHZ, "").strip()) * 1024.0
         else:
             return 0.0
+
+    def execute_sensors(self):
+        self.sensors_result = run(
+            command=GetCPUInfo.Constants.SENSORS,
+            echo_stdin=False,
+            in_stream=False,
+            out_stream=StringIO(),
+            err_stream=StringIO(),
+            warn=True
+        )
+
+    def process_sensors(self):
+        """
+        Parses the result of sensors to determine the CPU temperature
+        """
+        self.abort_if_sensors_failed()
+        lines = self.sensors_result.stdout.splitlines()
+
+        tctl_temp: Optional[float] = None
+        cpu_temp: Optional[float] = None
+
+        for line in lines:
+            split = line.split(GetCPUInfo.Constants.SENSORS_DELIMINATOR, 1)
+
+            if len(split) == 2:
+                key = split[0].strip()
+                value = split[1].strip()
+
+                if key == GetCPUInfo.Constants.TCTL:
+                    tctl_temp = self.convert_temp_str_to_celcius(value)
+                elif key == GetCPUInfo.Constants.CPU_TEMPERATURE:
+                    cpu_temp = self.convert_temp_str_to_celcius(value)
+
+        temp = tctl_temp if tctl_temp is not None else cpu_temp
+
+        for core in self.cores_by_id.values():
+            for cpu in core.cpus_by_id.values():
+                cpu.temperature = temp
+
+    def convert_temp_str_to_celcius(self, raw_temp: str) -> float:
+        if GetCPUInfo.Constants.DEGREES_CELCIUS in raw_temp:
+            cleaned_temp = raw_temp.replace(GetCPUInfo.Constants.DEGREES_CELCIUS, "").replace("+", "").strip()
+            return float(cleaned_temp.strip())
+        else:
+            return 0.0
+
+    def abort_if_sensors_failed(self):
+        """
+        Aborts the CLI if getting sensors failed.
+        """
+        if not self.sensors_result or self.sensors_result.return_code != 0:
+            message = f'{GetCPUInfo.Constants.SENSORS} did not run successfully: {self.sensors_result.stderr}'
+            click.echo(click.style(message, fg='red'))
+            raise click.Abort()

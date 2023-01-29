@@ -1,0 +1,42 @@
+k10temp-pci-00c3
+Adapter: PCI adapter
+Tctl:         +29.8°C
+
+nvme-pci-0a00
+Adapter: PCI adapter
+Composite:    +28.9°C  (low  =  -0.1°C, high = +77.8°C)
+                       (crit = +80.8°C)
+Sensor 1:     +28.9°C  (low  = -273.1°C, high = +65261.8°C)
+Sensor 2:     +31.9°C  (low  = -273.1°C, high = +65261.8°C)
+
+amdgpu-pci-0d00
+Adapter: PCI adapter
+vddgfx:      906.00 mV
+vddnb:       993.00 mV
+edge:         +28.0°C
+PPT:         1000.00 uW
+
+asus_wmi_sensors-virtual-0
+Adapter: Virtual device
+CPU Core Voltage:        730.00 mV
++12V Voltage:             12.03 V
++5V Voltage:               5.04 V
+3VSB Voltage:              3.33 V
+CPU Fan:                  691 RPM
+Chassis Fan 1:              0 RPM
+Chassis Fan 2:            721 RPM
+Chassis Fan 3:              0 RPM
+AIO Pump:                   0 RPM
+Water Pump:                 0 RPM
+CPU OPT:                    0 RPM
+CPU Temperature:          +29.0°C
+Motherboard Temperature:  +32.0°C
+Chipset Temperature:      +44.0°C
+Tsensor 1 Temperature:   +216.0°C
+
+nvme-pci-0b00
+Adapter: PCI adapter
+Composite:    +37.9°C  (low  =  -0.1°C, high = +77.8°C)
+                       (crit = +80.8°C)
+Sensor 1:     +37.9°C  (low  = -273.1°C, high = +65261.8°C)
+Sensor 2:     +41.9°C  (low  = -273.1°C, high = +65261.8°C)

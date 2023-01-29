@@ -8,6 +8,8 @@ class CPU:
     """
     id: str
     physical_id: str
+    core_id: str
+    model_name: str
     minimum_frequency: float
     maximum_frequency: float
     current_frequency: float
